@@ -1,12 +1,16 @@
+--
+-- Main Premake5 file for building Dear's ImGui project.
+-- Copyright (c) 2020-2022 by Danil (Kenny) Dukhovenko, All rights reserved.
+--
+
+-- ImGui C++ Project
 project "ImGui"
 	kind "StaticLib"
 	language "C++"
-
 	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
 	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
 
-	files
-	{
+	files {
 		"imconfig.h",
 		"imgui.h",
 		"imgui.cpp",
