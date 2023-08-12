@@ -1,6 +1,5 @@
 
 // Force Engine, 0.4.0-Q2
-//
 // dear imgui, 1.88 WIP with Force Engine changes -> use #FE_IMGUI_CXXXX to find all changes that was made for Force specific.
 // 
 // NOTE (For Daniel Dukhovenko):
@@ -12,9 +11,10 @@
 // If you will switch to another version of Dear's ImGui please check all #FE_IMGUI_ and make sure all it worth it.
 // 
 // List of changes:
-//  - #FE_IMGUI_C0001: [imgui .h/.cpp]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableNavUpdateWindowing (to disable CTRL+TAB for my Force.
+//  - #FE_IMGUI_C0001: [imgui .h/.cpp]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableCtrlTabWindowSelection flag to disabling starting CTRL+Tab or Square+L/R window selection.
 //  - #FE_IMGUI_C0002: [imgui    .cpp]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
 //  - #FE_IMGUI_C0003: [imgui    .cpp]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
+//  - #FE_IMGUI_C0004: [imgui .h     ]: ImGuiViewportFlags_. Add ImGuiViewportFlags_NoMaximized & ImGuiViewportFlags_DeactiveParentOnAppearing flags. (Implemented only for Win32 backend.)
 //
 
 // dear imgui, 1.88 WIP
@@ -11412,12 +11412,6 @@ static void ImGui::NavUpdateWindowing()
     ImGuiContext& g = *GImGui;
     ImGuiIO& io = g.IO;
 
-#if FE_IMGUI_C0001
-    // #FE_IMGUI_C0001: FIX_12.08.2023 [BETA] By Kenny Programmer. Not present in latest ImGui branch.
-    if (io.ConfigFlags & ImGuiConfigFlags_DisableNavUpdateWindowing)
-        return;
-#endif
-
     ImGuiWindow* apply_focus_window = NULL;
     bool apply_toggle_layer = false;
     
@@ -11435,17 +11429,27 @@ static void ImGui::NavUpdateWindowing()
     }
     
     // Start CTRL+Tab or Square+L/R window selection
-    const bool start_windowing_with_gamepad = allow_windowing && !g.NavWindowingTarget && IsNavInputTest(ImGuiNavInput_Menu, ImGuiNavReadMode_Pressed);
-    const bool start_windowing_with_keyboard = allow_windowing && !g.NavWindowingTarget && io.KeyCtrl && IsKeyPressed(ImGuiKey_Tab);
-    if (start_windowing_with_gamepad || start_windowing_with_keyboard)
-        if (ImGuiWindow* window = g.NavWindow ? g.NavWindow : FindWindowNavFocusable(g.WindowsFocusOrder.Size - 1, -INT_MAX, -1))
-        {
-            g.NavWindowingTarget = g.NavWindowingTargetAnim = window->RootWindow;
-            g.NavWindowingTimer = g.NavWindowingHighlightAlpha = 0.0f;
-            g.NavWindowingToggleLayer = start_windowing_with_gamepad ? true : false; // Gamepad starts toggling layer
-            g.NavInputSource = start_windowing_with_keyboard ? ImGuiInputSource_Keyboard : ImGuiInputSource_Gamepad;
-        }
-    
+    bool start_windowing = true;
+
+#if FE_IMGUI_C0001
+    // #FE_IMGUI_C0001:
+    start_windowing = !(io.ConfigFlags & ImGuiConfigFlags_DisableCtrlTabWindowSelection);
+#endif
+
+    if (start_windowing) {
+
+        const bool start_windowing_with_gamepad = allow_windowing && !g.NavWindowingTarget && IsNavInputTest(ImGuiNavInput_Menu, ImGuiNavReadMode_Pressed);
+        const bool start_windowing_with_keyboard = allow_windowing && !g.NavWindowingTarget && io.KeyCtrl && IsKeyPressed(ImGuiKey_Tab);
+        if (start_windowing_with_gamepad || start_windowing_with_keyboard)
+            if (ImGuiWindow* window = g.NavWindow ? g.NavWindow : FindWindowNavFocusable(g.WindowsFocusOrder.Size - 1, -INT_MAX, -1))
+            {
+                g.NavWindowingTarget = g.NavWindowingTargetAnim = window->RootWindow;
+                g.NavWindowingTimer = g.NavWindowingHighlightAlpha = 0.0f;
+                g.NavWindowingToggleLayer = start_windowing_with_gamepad ? true : false; // Gamepad starts toggling layer
+                g.NavInputSource = start_windowing_with_keyboard ? ImGuiInputSource_Keyboard : ImGuiInputSource_Gamepad;
+            }
+    }
+
     // Gamepad update
     g.NavWindowingTimer += io.DeltaTime;
     if (g.NavWindowingTarget && g.NavInputSource == ImGuiInputSource_Gamepad)
@@ -11479,7 +11483,7 @@ static void ImGui::NavUpdateWindowing()
         // Visuals only appears after a brief time after pressing TAB the first time, so that a fast CTRL+TAB doesn't add visual noise
         g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer - NAV_WINDOWING_HIGHLIGHT_DELAY) / 0.05f)); // 1.0f
         if (IsKeyPressed(ImGuiKey_Tab, true))
-            NavUpdateWindowingHighlightWindow(io.KeyShift ? +1 : -1);
+            NavUpdateWindowingHighlightWindow(io.KeyShift ? +1 : -1); // +1, -1
         if (!io.KeyCtrl)
             apply_focus_window = g.NavWindowingTarget;
     }
