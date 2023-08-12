@@ -1,3 +1,22 @@
+
+// Force Engine, 0.4.0-Q2
+//
+// dear imgui, 1.88 WIP with Force Engine changes -> use #FE_IMGUI_CXXXX to find all changes that was made for Force specific.
+// 
+// NOTE (For Daniel Dukhovenko):
+// Force modify internal imgui.h/imgui.cpp code ONLY: If there are no way to fix bug or implement some feautre
+// (reasons for that: )
+//   - A lot of internal code needs to be modify by ImGui Team so hold the release or bug-fix release.
+//   - Or Omar doesen't know how fix some problem (in rare cases).
+//   - Or really rarely is XY problem (think that you solve X, but actually solving Y or vise versa).
+// If you will switch to another version of Dear's ImGui please check all #FE_IMGUI_ and make sure all it worth it.
+// 
+// List of changes:
+//  - #FE_IMGUI_C0001: [imgui .h/.cpp]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableNavUpdateWindowing (to disable CTRL+TAB for my Force.
+//  - #FE_IMGUI_C0002: [imgui    .cpp]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
+//  - #FE_IMGUI_C0003: [imgui    .cpp]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
+//
+
 // dear imgui, 1.88 WIP
 // (main code and documentation)
 
@@ -5254,14 +5273,7 @@ static void FindHoveredWindow()
         g.MovingWindow->Viewport = moving_window_viewport;
 }
 
-<<<<<<< HEAD
-// Test if mouse cursor is hovering given rectangle
-// NB- RendererPrimitive is clipped by our current clip setting
-// NB- Expand the rectangle to be generous on imprecise inputs systems (g.Style.TouchExtraPadding)
-bool ImGui::IsMouseHoveringRect(const ImVec2& r_min, const ImVec2& r_max, bool clip)
-=======
 bool ImGui::IsItemActive()
->>>>>>> b3b408eaef73d1344564f9537d500bbdad2b6e54
 {
     ImGuiContext& g = *GImGui;
     if (g.ActiveId)
@@ -6417,7 +6429,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         window->IDStack.push_back(window->ID);
 
     // Add to stack
-    // We intentionally set g.CurrentWindow to NULL to prevent usage until when the viewport is set, then will call SetCurrentWindow()
+    // We intentionally set g.CurrentWindow to NULL to prevent usage until when the viewport is set, then will call SetWindow()
     g.CurrentWindow = window;
     ImGuiWindowStackData window_stack_data;
     window_stack_data.Window = window;
@@ -11400,14 +11412,20 @@ static void ImGui::NavUpdateWindowing()
     ImGuiContext& g = *GImGui;
     ImGuiIO& io = g.IO;
 
+#if FE_IMGUI_C0001
+    // #FE_IMGUI_C0001: FIX_12.08.2023 [BETA] By Kenny Programmer. Not present in latest ImGui branch.
+    if (io.ConfigFlags & ImGuiConfigFlags_DisableNavUpdateWindowing)
+        return;
+#endif
+
     ImGuiWindow* apply_focus_window = NULL;
     bool apply_toggle_layer = false;
-
+    
     ImGuiWindow* modal_window = GetTopMostPopupModal();
     bool allow_windowing = (modal_window == NULL);
     if (!allow_windowing)
         g.NavWindowingTarget = NULL;
-
+    
     // Fade out
     if (g.NavWindowingTargetAnim && g.NavWindowingTarget == NULL)
     {
@@ -11415,7 +11433,7 @@ static void ImGui::NavUpdateWindowing()
         if (g.DimBgRatio <= 0.0f && g.NavWindowingHighlightAlpha <= 0.0f)
             g.NavWindowingTargetAnim = NULL;
     }
-
+    
     // Start CTRL+Tab or Square+L/R window selection
     const bool start_windowing_with_gamepad = allow_windowing && !g.NavWindowingTarget && IsNavInputTest(ImGuiNavInput_Menu, ImGuiNavReadMode_Pressed);
     const bool start_windowing_with_keyboard = allow_windowing && !g.NavWindowingTarget && io.KeyCtrl && IsKeyPressed(ImGuiKey_Tab);
@@ -11427,14 +11445,14 @@ static void ImGui::NavUpdateWindowing()
             g.NavWindowingToggleLayer = start_windowing_with_gamepad ? true : false; // Gamepad starts toggling layer
             g.NavInputSource = start_windowing_with_keyboard ? ImGuiInputSource_Keyboard : ImGuiInputSource_Gamepad;
         }
-
+    
     // Gamepad update
     g.NavWindowingTimer += io.DeltaTime;
     if (g.NavWindowingTarget && g.NavInputSource == ImGuiInputSource_Gamepad)
     {
         // Highlight only appears after a brief time holding the button, so that a fast tap on PadMenu (to toggle NavLayer) doesn't add visual noise
         g.NavWindowingHighlightAlpha = ImMax(g.NavWindowingHighlightAlpha, ImSaturate((g.NavWindowingTimer - NAV_WINDOWING_HIGHLIGHT_DELAY) / 0.05f));
-
+    
         // Select window to focus
         const int focus_change_dir = (int)IsNavInputTest(ImGuiNavInput_FocusPrev, ImGuiNavReadMode_RepeatSlow) - (int)IsNavInputTest(ImGuiNavInput_FocusNext, ImGuiNavReadMode_RepeatSlow);
         if (focus_change_dir != 0)
@@ -11442,7 +11460,7 @@ static void ImGui::NavUpdateWindowing()
             NavUpdateWindowingHighlightWindow(focus_change_dir);
             g.NavWindowingHighlightAlpha = 1.0f;
         }
-
+    
         // Single press toggles NavLayer, long press with L/R apply actual focus on release (until then the window was merely rendered top-most)
         if (!IsNavInputDown(ImGuiNavInput_Menu))
         {
@@ -11454,7 +11472,7 @@ static void ImGui::NavUpdateWindowing()
             g.NavWindowingTarget = NULL;
         }
     }
-
+    
     // Keyboard: Focus
     if (g.NavWindowingTarget && g.NavInputSource == ImGuiInputSource_Keyboard)
     {
@@ -11465,7 +11483,7 @@ static void ImGui::NavUpdateWindowing()
         if (!io.KeyCtrl)
             apply_focus_window = g.NavWindowingTarget;
     }
-
+    
     // Keyboard: Press and Release ALT to toggle menu layer
     // - Testing that only Alt is tested prevents Alt+Shift or AltGR from toggling menu layer.
     // - AltGR is normally Alt+Ctrl but we can't reliably detect it (not all backends/systems/layout emit it as Alt+Ctrl). But even on keyboards without AltGR we don't want Alt+Ctrl to open menu anyway.
@@ -11481,7 +11499,7 @@ static void ImGui::NavUpdateWindowing()
         // We cancel toggling nav layer when other modifiers are pressed. (See #4439)
         if (io.InputQueueCharacters.Size > 0 || io.KeyCtrl || io.KeyShift || io.KeySuper)
             g.NavWindowingToggleLayer = false;
-
+    
         // Apply layer toggle on release
         // Important: as before version <18314 we lacked an explicit IO event for focus gain/loss, we also compare mouse validity to detect old backends clearing mouse pos on focus loss.
         if (IsKeyReleased(ImGuiKey_ModAlt) && g.NavWindowingToggleLayer)
@@ -11491,7 +11509,7 @@ static void ImGui::NavUpdateWindowing()
         if (!IsKeyDown(ImGuiKey_ModAlt))
             g.NavWindowingToggleLayer = false;
     }
-
+    
     // Move window
     if (g.NavWindowingTarget && !(g.NavWindowingTarget->Flags & ImGuiWindowFlags_NoMove))
     {
@@ -11510,7 +11528,7 @@ static void ImGui::NavUpdateWindowing()
             g.NavDisableMouseHover = true;
         }
     }
-
+    
     // Apply final focus
     if (apply_focus_window && (g.NavWindow == NULL || apply_focus_window != g.NavWindow->RootWindow))
     {
@@ -11522,7 +11540,7 @@ static void ImGui::NavUpdateWindowing()
         FocusWindow(apply_focus_window);
         if (apply_focus_window->NavLastIds[0] == 0)
             NavInitWindow(apply_focus_window, false);
-
+    
         // If the window has ONLY a menu layer (no main layer), select it directly
         // Use NavLayersActiveMaskNext since windows didn't have a chance to be Begin()-ed on this frame,
         // so CTRL+Tab where the keys are only held for 1 frame will be able to use correct layers mask since
@@ -11532,19 +11550,19 @@ static void ImGui::NavUpdateWindowing()
         // won't be valid.
         if (apply_focus_window->DC.NavLayersActiveMaskNext == (1 << ImGuiNavLayer_Menu))
             g.NavLayer = ImGuiNavLayer_Menu;
-
+    
         // Request OS level focus
         if (apply_focus_window->Viewport != previous_viewport && g.PlatformIO.Platform_SetWindowFocus)
             g.PlatformIO.Platform_SetWindowFocus(apply_focus_window->Viewport);
     }
     if (apply_focus_window)
         g.NavWindowingTarget = NULL;
-
+    
     // Apply menu/layer toggle
     if (apply_toggle_layer && g.NavWindow)
     {
         ClearActiveID();
-
+    
         // Move to parent menu if necessary
         ImGuiWindow* new_nav_window = g.NavWindow;
         while (new_nav_window->ParentWindow
@@ -11558,7 +11576,7 @@ static void ImGui::NavUpdateWindowing()
             FocusWindow(new_nav_window);
             new_nav_window->NavLastChildNavWindow = old_nav_window;
         }
-
+    
         // Toggle layer
         const ImGuiNavLayer new_nav_layer = (g.NavWindow->DC.NavLayersActiveMask & (1 << ImGuiNavLayer_Menu)) ? (ImGuiNavLayer)((int)g.NavLayer ^ 1) : ImGuiNavLayer_Main;
         if (new_nav_layer != g.NavLayer)
@@ -11769,7 +11787,7 @@ void ImGui::EndDragDropSource()
     g.DragDropWithinSource = false;
 }
 
-// Use 'cond' to choose to submit payload on drag start or every frame
+// Use 'Cond3' to choose to submit payload on drag start or every frame
 bool ImGui::SetDragDropPayload(const char* type, const void* data, size_t data_size, ImGuiCond cond)
 {
     ImGuiContext& g = *GImGui;
@@ -15254,12 +15272,20 @@ static void ImGui::DockNodeUpdateTabBar(ImGuiDockNode* node, ImGuiWindow* host_w
 
     // In a dock node, the Collapse Button turns into the Window Menu button.
     // FIXME-DOCK FIXME-OPT: Could we recycle popups id across multiple dock nodes?
+
+    // #FE_IMGUI_C0002: FIX_21.12.2022:
+    // This disable the ImGui 'Hide tab bar' buttons, because i cannot localize it and i think for Force is not nessisary that feature and evnetially
+    // this not work currecly with window flags, because this window is custom by ImGui to dock two windows togthegr.
+#if FE_IMGUI_C0002
+
     if (has_window_menu_button && IsPopupOpen("#WindowMenu"))
     {
         if (ImGuiID tab_id = DockNodeUpdateWindowMenu(node, tab_bar))
             focus_tab_id = tab_bar->NextSelectedTabId = tab_id;
         is_focused |= node->IsFocused;
     }
+
+#endif
 
     // Layout
     ImRect title_bar_rect, tab_bar_rect;
@@ -15748,9 +15774,17 @@ static void ImGui::DockNodePreviewDockRender(ImGuiWindow* host_window, ImGuiDock
 
     // Draw main preview rectangle
     const ImU32 overlay_col_main = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.60f : 0.40f);
+
+#if FE_IMGUI_C0003
+    //#FE_IMGUI_C0003: [19.05.23] Remove colors from dropand col_lines.
+    const ImU32 overlay_col_drop = ColorConvertFloat4ToU32({ 0.0f, 0.0f, 0.0f, 0.0f });
+    const ImU32 overlay_col_drop_hovered = ColorConvertFloat4ToU32({ 0.0f, 0.0f, 0.0f, 0.0f });
+    const ImU32 overlay_col_lines = ColorConvertFloat4ToU32({ 0.0f, 0.0f, 0.0f, 0.0f });
+#elif
     const ImU32 overlay_col_drop = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 0.90f : 0.70f);
     const ImU32 overlay_col_drop_hovered = GetColorU32(ImGuiCol_DockingPreview, is_transparent_payload ? 1.20f : 1.00f);
     const ImU32 overlay_col_lines = GetColorU32(ImGuiCol_NavWindowingHighlight, is_transparent_payload ? 0.80f : 0.60f);
+#endif
 
     // Display area preview
     const bool can_preview_tabs = (root_payload->DockNodeAsHost == NULL || root_payload->DockNodeAsHost->Windows.Size > 0);

@@ -1,4 +1,29 @@
-// dear imgui, v1.88 WIP
+
+// Force Engine, 0.4.0-Q2
+//
+// dear imgui, 1.88 WIP with Force Engine changes -> use #FE_IMGUI_CXXXX to find all changes that was made for Force specific.
+// 
+// NOTE (For Daniel Dukhovenko):
+// Force modify internal imgui.h/imgui.cpp code ONLY: If there are no way to fix bug or implement some feautre
+// (reasons for that: )
+//   - A lot of internal code needs to be modify by ImGui Team so hold the release or bug-fix release.
+//   - Or Omar doesen't know how fix some problem (in rare cases).
+//   - Or really rarely is XY problem (think that you solve X, but actually solving Y or vise versa).
+// If you will switch to another version of Dear's ImGui please check all #FE_IMGUI_ and make sure all it worth it.
+// 
+// List of changes:
+//  - #FE_IMGUI_C0001: [imgui .h/.cpp]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableNavUpdateWindowing (to disable CTRL+TAB for my Force.
+//  - #FE_IMGUI_C0002: [imgui    .cpp]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
+//  - #FE_IMGUI_C0003: [imgui    .cpp]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
+//
+
+// Enable or disable #FE_IMGUI_CXXXX change or fix, or bug fix that was not applied by Omar.
+
+#define FE_IMGUI_C0001 1  // 1 == enable custom ImGuiConfigFlags_DisableNavUpdateWindowing, 0, disale it.
+#define FE_IMGUI_C0002 0  // 1 == disable 'Hide tab bar' buttons, 0 - enable it.
+#define FE_IMGUI_C0003 1  // 1 == disable colors, 0 enable it back.
+
+// dear imgui, 1.88 WIP
 // (headers)
 
 // Help:
@@ -1578,7 +1603,12 @@ enum ImGuiConfigFlags_
 
     // User storage (to allow your backend/engine to communicate to code that may be shared between multiple projects. Those flags are not used by core Dear ImGui)
     ImGuiConfigFlags_IsSRGB                 = 1 << 20,  // Application is SRGB-aware.
-    ImGuiConfigFlags_IsTouchScreen          = 1 << 21   // Application is using a touch screen instead of a mouse.
+    ImGuiConfigFlags_IsTouchScreen          = 1 << 21,  // Application is using a touch screen instead of a mouse.
+
+#if FE_IMGUI_C0001
+    // #FE_IMGUI_C0001: [BETA] Disable CTRL+TAB for application.
+    ImGuiConfigFlags_DisableNavUpdateWindowing = 1 << 22
+#endif
 };
 
 // Backend capabilities flags stored in io.BackendFlags. Set by imgui_impl_xxx or custom backend.
@@ -3026,7 +3056,11 @@ enum ImGuiViewportFlags_
     ImGuiViewportFlags_TopMost                  = 1 << 9,   // Platform Window: Display on top (for tooltips only).
     ImGuiViewportFlags_Minimized                = 1 << 10,  // Platform Window: Window is minimized, can skip render. When minimized we tend to avoid using the viewport pos/size for clipping window or testing if they are contained in the viewport.
     ImGuiViewportFlags_NoAutoMerge              = 1 << 11,  // Platform Window: Avoid merging this window into another host window. This can only be set via ImGuiWindowClass viewport flags override (because we need to now ahead if we are going to create a viewport in the first place!).
-    ImGuiViewportFlags_CanHostOtherWindows      = 1 << 12   // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
+    ImGuiViewportFlags_CanHostOtherWindows      = 1 << 12,  // Main viewport: can host multiple imgui windows (secondary viewports are associated to a single window).
+
+    // Force Changes: May in future add to main branch. (Implemented only for Win32 backend.)
+    ImGuiViewportFlags_NoMaximized               = 1 << 13, // Platform Window: When window is maximized render maximized box if present on this platform.
+    ImGuiViewportFlags_DeactiveParentOnAppearing = 1 << 14  // Platform Window: Set the parent window of this viewport to be unactive on appearing viewport. (usefull for custom dialog windows created using ImGui.)
 };
 
 // - Currently represents the Platform Window created by the application which is hosting our Dear ImGui windows.
