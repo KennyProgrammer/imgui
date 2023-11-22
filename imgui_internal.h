@@ -1871,12 +1871,8 @@ struct ImGuiContext
     ImGuiDir                NavMoveDir;                         // Direction of the move request (left/right/up/down)
     ImGuiDir                NavMoveDirForDebug;
     ImGuiDir                NavMoveClipDir;                     // FIXME-NAV: Describe the purpose of this better. Might want to rename?
-<<<<<<< HEAD
-    ImRect                  NavScoringRect;                     // RendererPrimitive used for scoring, in screen space. Based of window->NavRectRel[], modified for directional navigation scoring.
-=======
     ImRect                  NavScoringRect;                     // Rectangle used for scoring, in screen space. Based of window->NavRectRel[], modified for directional navigation scoring.
     ImRect                  NavScoringNoClipRect;               // Some nav operations (such as PageUp/PageDown) enforce a region which clipper will attempt to always keep submitted
->>>>>>> b3b408eaef73d1344564f9537d500bbdad2b6e54
     int                     NavScoringDebugCount;               // Metrics for debugging
     int                     NavTabbingDir;                      // Generally -1 or +1, 0 when tabbing without a nav id
     int                     NavTabbingCounter;                  // >0 when counting items for tabbing
@@ -2897,7 +2893,7 @@ namespace ImGui
     IMGUI_API void          ActivateItem(ImGuiID id);   // Remotely activate a button, checkbox, tree node etc. given its unique ID. activation is queued and processed on the next frame when the item is encountered again.
     IMGUI_API void          SetNavID(ImGuiID id, ImGuiNavLayer nav_layer, ImGuiID focus_scope_id, const ImRect& rect_rel);
 
-    // Focus Scope (WIP)
+    // Focus RefUnique (WIP)
     // This is generally used to identify a selection set (multiple of which may be in the same window), as selection
     // patterns generally need to react (e.g. clear selection) when landing on an item of the set.
     IMGUI_API void          PushFocusScope(ImGuiID id);

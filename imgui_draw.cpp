@@ -2319,7 +2319,7 @@ struct ImFontBuildSrcData
 {
     stbtt_fontinfo      FontInfo;
     stbtt_pack_range    PackRange;          // Hold the list of codepoints to pack (essentially points to Codepoints.Data)
-    stbrp_rect*         Rects;              // RendererPrimitive to pack. We first fill in their size and the packer will give us their position.
+    stbrp_rect*         Rects;              // Rectangle to pack. We first fill in their size and the packer will give us their position.
     stbtt_packedchar*   PackedChars;        // Output glyphs
     const ImWchar*      SrcRanges;          // Ranges as requested by user (user is allowed to request too much, e.g. 0x0020..0xFFFF)
     int                 DstIndex;           // Index into atlas->Fonts[] and dst_tmp_array[]

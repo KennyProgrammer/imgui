@@ -1,14 +1,16 @@
 --
 -- Main Premake5 file for building Dear's ImGui project.
--- Copyright (c) 2020-2022 by Danil (Kenny) Dukhovenko, All rights reserved.
+-- Copyright (c) 2019-2023 by Danil (Kenny) Dukhovenko, All rights reserved.
 --
 
 -- ImGui C++ Project
 project "ImGui"
-	kind "StaticLib"
-	language "C++"
-	targetdir ("bin/" .. outputdir .. "/%{prj.name}")
-	objdir ("bin-int/" .. outputdir .. "/%{prj.name}")
+	kind          "StaticLib"
+	language      "C++"
+	cppdialect    "C++17"
+	staticruntime "On"
+	targetdir     ("%{ForceDir.BinLib}/" .. BuildDir .. "/%{prj.name}/lib")
+	objdir        ("%{ForceDir.BinLib}/" .. BuildDir .. "/%{prj.name}/obj")
 
 	files {
 		"imconfig.h",
@@ -26,14 +28,10 @@ project "ImGui"
 
 	filter "system:windows"
 		systemversion "latest"
-		cppdialect "C++17"
-		staticruntime "On"
 
 	filter "system:linux"
 		pic "On"
 		systemversion "latest"
-		cppdialect "C++17"
-		staticruntime "On"
 
 	filter "configurations:Debug"
 		runtime "Debug"
