@@ -2,6 +2,9 @@
 -- Main Premake5 file for building Dear's ImGui project.
 -- Copyright (c) 2019-2023 by Danil (Kenny) Dukhovenko, All rights reserved.
 --
+-- Requirement:
+--  - ForceEngine.lua
+--
 
 -- ImGui C++ Project
 project "ImGui"
@@ -9,8 +12,8 @@ project "ImGui"
 	language      "C++"
 	cppdialect    "C++17"
 	staticruntime "On"
-	targetdir     ("%{ForceDir.BinLib}/" .. BuildDir .. "/%{prj.name}/lib")
-	objdir        ("%{ForceDir.BinLib}/" .. BuildDir .. "/%{prj.name}/obj")
+	targetdir     ("%{ForceDir.BinLib}/" .. BuildDir .. "/%{prj.name}/Lib")
+	objdir        ("%{ForceDir.BinLib}/" .. BuildDir .. "/%{prj.name}/Obj")
 
 	files {
 		"imconfig.h",
