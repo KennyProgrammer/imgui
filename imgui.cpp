@@ -1207,6 +1207,9 @@ ImGuiIO::ImGuiIO()
     ConfigInputTextCursorBlink = true;
     ConfigWindowsResizeFromEdges = true;
     ConfigWindowsMoveFromTitleBarOnly = false;
+#if FE_IMGUI_C0005
+    ConfigWindowsMoveFromTitleBarOnlyEx = false;
+#endif
     ConfigMemoryCompactTimer = 60.0f;
 
     // Platform Functions
@@ -4030,7 +4033,11 @@ void ImGui::UpdateMouseMovingWindowEndFrame()
             StartMouseMovingWindow(g.HoveredWindow); //-V595
 
             // Cancel moving if clicked outside of title bar
+#if FE_IMGUI_C0005
+            if (g.IO.ConfigWindowsMoveFromTitleBarOnly || g.IO.ConfigWindowsMoveFromTitleBarOnlyEx)
+#else
             if (g.IO.ConfigWindowsMoveFromTitleBarOnly)
+#endif
                 if (!(root_window->Flags & ImGuiWindowFlags_NoTitleBar) || root_window->DockIsActive)
                     if (!root_window->TitleBarRect().Contains(g.IO.MouseClickedPos[0]))
                         g.MovingWindow = NULL;
@@ -6665,7 +6672,7 @@ bool ImGui::Begin(const char* name, bool* p_open, ImGuiWindowFlags flags)
         window->Size = window->Collapsed && !(flags & ImGuiWindowFlags_ChildWindow) ? window->TitleBarRect().GetSize() : window->SizeFull;
 
         // Decoration size
-        const float decoration_up_height = window->TitleBarHeight() + window->MenuBarHeight();
+        const float decoration_up_height = window->TitleBarHeight();// + window->MenuBarHeight();
 
         // POSITION
 

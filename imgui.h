@@ -1,6 +1,7 @@
 
 // Force Engine, 0.4.0-Q2
 // dear imgui, 1.88 WIP with Force Engine changes -> use #FE_IMGUI_CXXXX to find all changes that was made for Force specific.
+// latest dear imgui, 1.90 WIP
 // 
 // NOTE (For Daniel Dukhovenko):
 // Force modify internal imgui.h/imgui.cpp code ONLY: If there are no way to fix bug or implement some feautre
@@ -15,6 +16,7 @@
 //  - #FE_IMGUI_C0002: [imgui    .cpp]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
 //  - #FE_IMGUI_C0003: [imgui    .cpp]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
 //  - #FE_IMGUI_C0004: [imgui .h     ]: ImGuiViewportFlags_. Add ImGuiViewportFlags_NoMaximized & ImGuiViewportFlags_DeactiveParentOnAppearing flags. (Implemented only for Win32 backend.)
+//  - #FE_IMGUI_C0005: [imgui .h/.cpp]: IO -> ConfigFlags. Add ConfigWindowsMoveFromTitleBarOnlyEx to allowing ONLY move window throw title bar, and not affect ClampWindowRect() logic witch in other case break moving window throgh any side bar. See https://github.com/ocornut/imgui/issues/7118.
 //
 
 // Enable or disable #FE_IMGUI_CXXXX change or fix, or bug fix that was not applied by Omar.
@@ -23,6 +25,7 @@
 #define FE_IMGUI_C0002 0  // 1 == disable 'Hide tab bar' buttons, 0 - enable it.
 #define FE_IMGUI_C0003 1  // 1 == disable colors, 0 enable it back.
 #define FE_IMGUI_C0004 1  // 1 == apply new flags, 0 remove new flags.
+#define FE_IMGUI_C0005 1  // 1 == apply new config, 0 remove config. 
 
 // dear imgui, 1.88 WIP
 // (headers)
@@ -2052,6 +2055,9 @@ struct ImGuiIO
     bool        ConfigDragClickToInputText;     // = false          // [BETA] Enable turning DragXXX widgets into text input with a simple mouse click-release (without moving). Not desirable on devices without a keyboard.
     bool        ConfigWindowsResizeFromEdges;   // = true           // Enable resizing of windows from their edges and from the lower-left corner. This requires (io.BackendFlags & ImGuiBackendFlags_HasMouseCursors) because it needs mouse cursor feedback. (This used to be a per-window ImGuiWindowFlags_ResizeFromAnySide flag)
     bool        ConfigWindowsMoveFromTitleBarOnly; // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
+#if FE_IMGUI_C0005
+    bool        ConfigWindowsMoveFromTitleBarOnlyEx; // = false     // The same as ConfigWindowsMoveFromTitleBarOnly, but only cancel moving if clicked outside of title bar. Original ConfigWindowsMoveFromTitleBarOnly does this and also used in ClampWindowRect(). But for Force in the Editor we need ONLY only cancel moving if clicked outside of title bar, and not affect on ClampWindowRect(), because if not we cannot move windows through any side bar. See https://github.com/ocornut/imgui/issues/7118.
+#endif
     float       ConfigMemoryCompactTimer;       // = 60.0f          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
 
     //------------------------------------------------------------------
@@ -3063,7 +3069,8 @@ enum ImGuiViewportFlags_
     // #FE_IMGUI_C0004 (Implemented only for Win32 backend.)
 
     ImGuiViewportFlags_NoMaximized               = 1 << 13, // Platform Window: When window is maximized render maximized box if present on this platform.
-    ImGuiViewportFlags_DeactiveParentOnAppearing = 1 << 14  // Platform Window: Set the parent window of this viewport to be unactive on appearing viewport. (usefull for custom dialog windows created using ImGui.)
+    ImGuiViewportFlags_DeactiveParentOnAppearing = 1 << 14, // Platform Window: Set the parent window of this viewport to be unactive on appearing viewport. (usefull for custom dialog windows created using ImGui.)
+    ImGuiViewportFlags_NoMouseInputs             = 1 << 15  // Platform Window: Block any mouse input from OS to platform window, since ImGuiViewportFlags_NoInputs is fake and have differ behaviour. In my opinion ImGuiViewportFlags_NoInputs should be called ImGuiViewportFlags_MousePassThrough.
 #endif
 
 };
