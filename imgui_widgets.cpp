@@ -3717,6 +3717,15 @@ static bool STB_TEXTEDIT_INSERTCHARS(ImGuiInputTextState* obj, int pos, const Im
     if (!is_resizable && (new_text_len_utf8 + obj->CurLenA + 1 > obj->BufCapacityA))
         return false;
 
+#if FE_IMGUI_C0007
+    // Force: [FE_IMGUI_C0007]
+    // If obj->CurLenA + text_len > 1 we abort input, because of CharOnlyBehaviour.
+    if (obj->Flags & ImGuiInputTextFlags_CharOnlyBehaviour) {
+        if ((obj->CurLenA + text_len) > 1)
+            return false;
+    }
+#endif
+
     // Grow internal buffer if needed
     if (new_text_len + text_len + 1 > obj->TextW.Size)
     {
@@ -6297,9 +6306,18 @@ bool ImGui::Selectable(const char* label, bool selected, ImGuiSelectableFlags fl
     if (hovered || selected)
     {
         const ImU32 col = GetColorU32((held && hovered) ? ImGuiCol_HeaderActive : hovered ? ImGuiCol_HeaderHovered : ImGuiCol_Header);
+#if FE_IMGUI_C0006
+        RenderFrame(bb.Min, bb.Max, col, false, style.FrameRounding);
+#else
         RenderFrame(bb.Min, bb.Max, col, false, 0.0f);
+#endif
+       
     }
+#if FE_IMGUI_C0006
+    RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin);
+#else
     RenderNavHighlight(bb, id, ImGuiNavHighlightFlags_TypeThin | ImGuiNavHighlightFlags_NoRounding);
+#endif
 
     if (span_all_columns && window->DC.CurrentColumns)
         PopColumnsBackground();

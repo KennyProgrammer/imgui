@@ -1,7 +1,7 @@
 
-// Force Engine, 0.4.0-Q3
+// Force Engine, 2025.b1
 // dear imgui, 1.88 WIP with Force Engine changes -> use #FE_IMGUI_CXXXX to find all changes that was made for Force specific.
-// latest dear imgui, 1.90 WIP
+// latest dear imgui, 2.00 WIP
 // 
 // NOTE (For Daniel Dukhovenko):
 // Force modify internal imgui.h/imgui.cpp code ONLY: If there are no way to fix bug or implement some feautre
@@ -12,11 +12,13 @@
 // If you will switch to another version of Dear's ImGui please check all #FE_IMGUI_ and make sure all it worth it.
 // 
 // List of changes:
-//  - #FE_IMGUI_C0001: [imgui .h/.cpp]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableCtrlTabWindowSelection flag to disabling starting CTRL+Tab or Square+L/R window selection.
-//  - #FE_IMGUI_C0002: [imgui    .cpp]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
-//  - #FE_IMGUI_C0003: [imgui    .cpp]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
-//  - #FE_IMGUI_C0004: [imgui .h     ]: ImGuiViewportFlags_. Add ImGuiViewportFlags_NoMaximized & ImGuiViewportFlags_DeactiveParentOnAppearing flags. (Implemented only for Win32 backend.)
-//  - #FE_IMGUI_C0005: [imgui .h/.cpp]: IO -> ConfigFlags. Add ConfigWindowsMoveFromTitleBarOnlyEx to allowing ONLY move window throw title bar, and not affect ClampWindowRect() logic witch in other case break moving window throgh any side bar. See https://github.com/ocornut/imgui/issues/7118.
+//  - #FE_IMGUI_C0001: [imgui .h/.cpp       ]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableCtrlTabWindowSelection flag to disabling starting CTRL+Tab or Square+L/R window selection.
+//  - #FE_IMGUI_C0002: [imgui    .cpp       ]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
+//  - #FE_IMGUI_C0003: [imgui    .cpp       ]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
+//  - #FE_IMGUI_C0004: [imgui .h            ]: ImGuiViewportFlags_. Add ImGuiViewportFlags_NoMaximized & ImGuiViewportFlags_DeactiveParentOnAppearing flags. (Implemented only for Win32 backend.)
+//  - #FE_IMGUI_C0005: [imgui .h/.cpp       ]: IO -> ConfigFlags. Add ConfigWindowsMoveFromTitleBarOnlyEx to allowing ONLY move window throw title bar, and not affect ClampWindowRect() logic witch in other case break moving window throgh any side bar. See https://github.com/ocornut/imgui/issues/7118.
+//  - #FE_IMGUI_C0006: [_widgets.cpp        ]: Add missing frame rounding to selectables.
+//  - #FE_IMGUI_C0007: [imgui.h/_widgets.cpp]: Add ImGuiInputTextFlags_CharOnlyBehaviour.
 //
 
 // Enable or disable #FE_IMGUI_CXXXX change or fix, or bug fix that was not applied by Omar.
@@ -25,7 +27,9 @@
 #define FE_IMGUI_C0002 0  // 1 == disable 'Hide tab bar' buttons, 0 - enable it.
 #define FE_IMGUI_C0003 1  // 1 == disable colors, 0 enable it back.
 #define FE_IMGUI_C0004 1  // 1 == apply new flags, 0 remove new flags.
-#define FE_IMGUI_C0005 1  // 1 == apply new config, 0 remove config. 
+#define FE_IMGUI_C0005 1  // 1 == apply new config, 0 remove config.
+#define FE_IMGUI_C0006 1  // 1 == apply new feature, 0 remove feature.
+#define FE_IMGUI_C0007 1  // 1 == apply new feature, 0 remove feature.
 
 // dear imgui, 1.88 WIP
 // (headers)
@@ -1074,7 +1078,11 @@ enum ImGuiInputTextFlags_
     ImGuiInputTextFlags_NoUndoRedo          = 1 << 16,  // Disable undo/redo. Note that input text owns the text data while active, if you want to provide your own undo/redo stack you need e.g. to call ClearActiveID().
     ImGuiInputTextFlags_CharsScientific     = 1 << 17,  // Allow 0123456789.+-*/eE (Scientific notation input)
     ImGuiInputTextFlags_CallbackResize      = 1 << 18,  // Callback on buffer capacity changes request (beyond 'buf_size' parameter value), allowing the string to grow. Notify when the string wants to be resized (for string types which hold a cache of their Size). You will be provided a new BufSize in the callback and NEED to honor it. (see misc/cpp/imgui_stdlib.h for an example of using this)
-    ImGuiInputTextFlags_CallbackEdit        = 1 << 19   // Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
+    ImGuiInputTextFlags_CallbackEdit        = 1 << 19,  // Callback on any edit (note that InputText() already returns true on edit, the callback is useful mainly to manipulate the underlying buffer while focus is active)
+
+#if FE_IMGUI_C0007
+    ImGuiInputTextFlags_CharOnlyBehaviour   = 1 << 22   // Enable bahavour for this InputText as char only. Will allow only input a single char.
+#endif
 
     // Obsolete names (will be removed soon)
 #ifndef IMGUI_DISABLE_OBSOLETE_FUNCTIONS
