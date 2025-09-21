@@ -19,7 +19,7 @@
 //  - #FE_IMGUI_C0005: [imgui .h/.cpp       ]: IO -> ConfigFlags. Add ConfigWindowsMoveFromTitleBarOnlyEx to allowing ONLY move window throw title bar, and not affect ClampWindowRect() logic witch in other case break moving window throgh any side bar. See https://github.com/ocornut/imgui/issues/7118.
 //  - #FE_IMGUI_C0006: [_widgets.cpp        ]: Add missing frame rounding to selectables.
 //  - #FE_IMGUI_C0007: [imgui.h/_widgets.cpp]: Add ImGuiInputTextFlags_CharOnlyBehaviour.
-//
+// 
 
 // Enable or disable #FE_IMGUI_CXXXX change or fix, or bug fix that was not applied by Omar.
 
