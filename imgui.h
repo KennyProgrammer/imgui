@@ -10,16 +10,21 @@
 //   - Or Omar doesen't know how fix some problem (in rare cases).
 //   - Or really rarely is XY problem (think that you solve X, but actually solving Y or vise versa).
 // If you will switch to another version of Dear's ImGui please check all #FE_IMGUI_ and make sure all it worth it.
+// Starts with Force 2025.b1-pre3 (08.04.2026), i'm probably will never update ImGui ever (because for my engine,
+// basically all basic, and main API, ImGui provides to me, and i'm very thankful for that for all ImGui Team! ).
+// Win32, X11, Cocoa, Android. OpenGL, DX10/11/12, Vulkan, Metal, already has all platform that i need, so its not
+// point to update, because every time it start to do harder, and at this point, it fary impossible, because i
+// made too much custom widgets, platform-backend changes and modify ImGui Core like 8 time by now.
 // 
 // List of changes:
-//  - #FE_IMGUI_C0001: [imgui .h/.cpp       ]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableCtrlTabWindowSelection flag to disabling starting CTRL+Tab or Square+L/R window selection.
-//  - #FE_IMGUI_C0002: [imgui    .cpp       ]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
-//  - #FE_IMGUI_C0003: [imgui    .cpp       ]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
-//  - #FE_IMGUI_C0004: [imgui .h            ]: ImGuiViewportFlags_. Add ImGuiViewportFlags_NoMaximized & ImGuiViewportFlags_DeactiveParentOnAppearing flags. (Implemented only for Win32 backend.)
-//  - #FE_IMGUI_C0005: [imgui .h/.cpp       ]: IO -> ConfigFlags. Add ConfigWindowsMoveFromTitleBarOnlyEx to allowing ONLY move window throw title bar, and not affect ClampWindowRect() logic witch in other case break moving window throgh any side bar. See https://github.com/ocornut/imgui/issues/7118.
-//  - #FE_IMGUI_C0006: [_widgets.cpp        ]: Add missing frame rounding to selectables.
-//  - #FE_IMGUI_C0007: [imgui.h/_widgets.cpp]: Add ImGuiInputTextFlags_CharOnlyBehaviour.
-// 
+//  - #FE_IMGUI_C0001: [imgui .h/.cpp                   ]: NavUpdateWindowing(). Uses custom ImGuiConfigFlags_DisableCtrlTabWindowSelection flag to disabling starting CTRL+Tab or Square+L/R window selection.
+//  - #FE_IMGUI_C0002: [imgui    .cpp                   ]: DockNodeUpdateTabBar(). This disable the ImGui 'Hide tab bar' buttons, because i cannot localize itand i think for Force is not nessisary that featureand evnetiallythis not work currecly with window flags, because this window is custom by ImGui to dock two windows together.
+//  - #FE_IMGUI_C0003: [imgui    .cpp                   ]: DockNodePreviewDockRender(). Remove colors from drop and col_lines. I.e docking four mini preview sides.
+//  - #FE_IMGUI_C0004: [imgui .h                        ]: ImGuiViewportFlags_. Add ImGuiViewportFlags_NoMaximized & ImGuiViewportFlags_DeactiveParentOnAppearing flags. (Implemented only for Win32 backend.)
+//  - #FE_IMGUI_C0005: [imgui .h/.cpp                   ]: IO -> ConfigFlags. Add ConfigWindowsMoveFromTitleBarOnlyEx to allowing ONLY move window throw title bar, and not affect ClampWindowRect() logic witch in other case break moving window throgh any side bar. See https://github.com/ocornut/imgui/issues/7118.
+//  - #FE_IMGUI_C0006: [_widgets.cpp                    ]: Add missing frame rounding to selectables.
+//  - #FE_IMGUI_C0007: [imgui.h/_widgets.cpp            ]: Add ImGuiInputTextFlags_CharOnlyBehaviour.
+//  - #FE_IMGUI_C0008: [imgui.h/_widgets.cpp/_internal.h]: Add ability to completly disable drawing all RenderNavHighlight from most of widgets. This used only for Force Editor, in other Force Applications we can re-enable that.
 
 // Enable or disable #FE_IMGUI_CXXXX change or fix, or bug fix that was not applied by Omar.
 
@@ -30,6 +35,8 @@
 #define FE_IMGUI_C0005 1  // 1 == apply new config, 0 remove config.
 #define FE_IMGUI_C0006 1  // 1 == apply new feature, 0 remove feature.
 #define FE_IMGUI_C0007 1  // 1 == apply new feature, 0 remove feature.
+#define FE_IMGUI_C0008 1  // 1 == apply new feature, 0 remove feature.
+#define FE_IMGUI_C0009 1  // 1 == apply new feature, 0 remove feature.
 
 // dear imgui, 1.88 WIP
 // (headers)
@@ -281,6 +288,9 @@ typedef int     (*ImGuiInputTextCallback)(ImGuiInputTextCallbackData* data);    
 typedef void    (*ImGuiSizeCallback)(ImGuiSizeCallbackData* data);              // Callback function for ImGui::SetNextWindowSizeConstraints()
 typedef void*   (*ImGuiMemAllocFunc)(size_t sz, void* user_data);               // Function signature for ImGui::SetAllocatorFunctions()
 typedef void    (*ImGuiMemFreeFunc)(void* ptr, void* user_data);                // Function signature for ImGui::SetAllocatorFunctions()
+#if FE_IMGUI_C0009
+typedef void    (*ImGuiTableHeaderPopupFn)(void* table);
+#endif
 
 // ImVec2: 2D vector used to store positions, sizes etc. [Compile-time configurable type]
 // This is a frequently used type in the API. Consider using IM_VEC2_CLASS_EXTRA to create implicit cast from/to our preferred type.
@@ -792,14 +802,17 @@ namespace ImGui
     //   changed since last call, or the first time. Make sure to set 'SpecsDirty = false' after sorting,
     //   else you may wastefully sort your data every frame!
     // - Functions args 'int column_n' treat the default value of -1 as the same as passing the current column index.
-    IMGUI_API ImGuiTableSortSpecs*  TableGetSortSpecs();                        // get latest sort specs for the table (NULL if not sorting).  Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
-    IMGUI_API int                   TableGetColumnCount();                      // return number of columns (value passed to BeginTable)
-    IMGUI_API int                   TableGetColumnIndex();                      // return current column index.
-    IMGUI_API int                   TableGetRowIndex();                         // return current row index.
-    IMGUI_API const char*           TableGetColumnName(int column_n = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
-    IMGUI_API ImGuiTableColumnFlags TableGetColumnFlags(int column_n = -1);     // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
-    IMGUI_API void                  TableSetColumnEnabled(int column_n, bool v);// change user accessible enabled/disabled state of a column. Set to false to hide the column. User can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
-    IMGUI_API void                  TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+    IMGUI_API ImGuiTableSortSpecs*    TableGetSortSpecs();                        // get latest sort specs for the table (NULL if not sorting).  Lifetime: don't hold on this pointer over multiple frames or past any subsequent call to BeginTable().
+    IMGUI_API int                     TableGetColumnCount();                      // return number of columns (value passed to BeginTable)
+    IMGUI_API int                     TableGetColumnIndex();                      // return current column index.
+    IMGUI_API int                     TableGetRowIndex();                         // return current row index.
+    IMGUI_API const char*             TableGetColumnName(int column_n = -1);      // return "" if column didn't have a name declared by TableSetupColumn(). Pass -1 to use current column.
+    IMGUI_API ImGuiTableColumnFlags   TableGetColumnFlags(int column_n = -1);     // return column flags so you can query their Enabled/Visible/Sorted/Hovered status flags. Pass -1 to use current column.
+    IMGUI_API void                    TableSetColumnEnabled(int column_n, bool v);// change user accessible enabled/disabled state of a column. Set to false to hide the column. User can use the context menu to change this themselves (right-click in headers, or right-click in columns body with ImGuiTableFlags_ContextMenuInBody)
+    IMGUI_API void                    TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
+#if FE_IMGUI_C0009
+    IMGUI_API ImGuiTableHeaderPopupFn TableSetOverrideHeaderPopupCallback(ImGuiTableHeaderPopupFn);
+#endif
 
     // Legacy Columns API (prefer using Tables!)
     // - You can also use SameLine(pos_x) to mimic simplified columns.

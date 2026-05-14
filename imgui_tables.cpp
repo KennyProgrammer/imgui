@@ -709,6 +709,20 @@ static void TableSetupColumnFlags(ImGuiTable* table, ImGuiTableColumn* column, I
     }
 }
 
+// Allows to override default context popup behaviour that exist on ImGui::TableHeadersRow. The problem is that ImGui::TableHeadersRow
+// itself recommended to change and write completly user version, but rendering context popup on that header is part of ImGui internal
+// Table API, i think [Part 12-14], so it cannot be changed or modified sowehow, so only way is use HACK and ablility to override that
+// behaviour via callback.
+#if FE_IMGUI_C0009
+static ImGuiTableHeaderPopupFn TableDrawContextMenu_Override = nullptr;
+ImGuiTableHeaderPopupFn ImGui::TableSetOverrideHeaderPopupCallback(ImGuiTableHeaderPopupFn fn)
+{
+    ImGuiTableHeaderPopupFn prevFn = TableDrawContextMenu_Override;
+    TableDrawContextMenu_Override = fn;
+    return prevFn;
+}
+#endif
+
 // Layout columns for the frame. This is in essence the followup to BeginTable().
 // Runs on the first call to TableNextRow(), to give a chance for TableSetupColumn() to be called first.
 // FIXME-TABLE: Our width (and therefore our WorkRect) will be minimal in the first frame for _WidthAuto columns.
@@ -1107,15 +1121,24 @@ void ImGui::TableUpdateLayout(ImGuiTable* table)
     // [Part 11] Context menu
     if (table->IsContextPopupOpen && table->InstanceCurrent == table->InstanceInteracted)
     {
-        const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table->ID);
-        if (BeginPopupEx(context_menu_id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings))
-        {
-            TableDrawContextMenu(table);
-            EndPopup();
+        bool is_override_version = false;
+#if FE_IMGUI_C0009
+        if (TableDrawContextMenu_Override) {
+            TableDrawContextMenu_Override(table);
+            is_override_version = true;
         }
-        else
-        {
-            table->IsContextPopupOpen = false;
+#endif
+        if (!is_override_version) {
+            const ImGuiID context_menu_id = ImHashStr("##ContextMenu", 0, table->ID);
+            if (BeginPopupEx(context_menu_id, ImGuiWindowFlags_AlwaysAutoResize | ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoSavedSettings))
+            {
+                TableDrawContextMenu(table);
+                EndPopup();
+            }
+            else
+            {
+                table->IsContextPopupOpen = false;
+            }
         }
     }
 
@@ -1658,6 +1681,7 @@ void ImGui::TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n
         IM_ASSERT(0);
     }
 }
+
 
 //-------------------------------------------------------------------------
 // [SECTION] Tables: Row changes
