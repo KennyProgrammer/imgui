@@ -25,6 +25,8 @@
 //  - #FE_IMGUI_C0006: [_widgets.cpp                    ]: Add missing frame rounding to selectables.
 //  - #FE_IMGUI_C0007: [imgui.h/_widgets.cpp            ]: Add ImGuiInputTextFlags_CharOnlyBehaviour.
 //  - #FE_IMGUI_C0008: [imgui.h/_widgets.cpp/_internal.h]: Add ability to completly disable drawing all RenderNavHighlight from most of widgets. This used only for Force Editor, in other Force Applications we can re-enable that.
+//  - #FE_IMGUI_C0009: [imgui.h/_tables.cpp             ]: Add ability to override default context popup behaviour that exist on ImGui::TableHeadersRow. See ImGui::TableSetOverrideHeaderPopupCallback in imgui_tables.cpp.
+//  - #FE_IMPUT_C0010: [imgui.h/_internal.cpp           ]: Add ability to disable any ItemHoverable behaviour (so for example for external drag drop we can drag and no see any hovered item colors and tooltip timer activation).
 
 // Enable or disable #FE_IMGUI_CXXXX change or fix, or bug fix that was not applied by Omar.
 
@@ -37,6 +39,7 @@
 #define FE_IMGUI_C0007 1  // 1 == apply new feature, 0 remove feature.
 #define FE_IMGUI_C0008 1  // 1 == apply new feature, 0 remove feature.
 #define FE_IMGUI_C0009 1  // 1 == apply new feature, 0 remove feature.
+#define FE_IMGUI_C0010 1  // 1 == apply new feature, 0 remove feature.
 
 // dear imgui, 1.88 WIP
 // (headers)
@@ -2078,6 +2081,9 @@ struct ImGuiIO
     bool        ConfigWindowsMoveFromTitleBarOnly; // = false       // Enable allowing to move windows only when clicking on their title bar. Does not apply to windows without a title bar.
 #if FE_IMGUI_C0005
     bool        ConfigWindowsMoveFromTitleBarOnlyEx; // = false     // The same as ConfigWindowsMoveFromTitleBarOnly, but only cancel moving if clicked outside of title bar. Original ConfigWindowsMoveFromTitleBarOnly does this and also used in ClampWindowRect(). But for Force in the Editor we need ONLY only cancel moving if clicked outside of title bar, and not affect on ClampWindowRect(), because if not we cannot move windows through any side bar. See https://github.com/ocornut/imgui/issues/7118.
+#endif
+#if FE_IMGUI_C0010
+    bool        ConfigDisableItemHoverableBehaviour; // = false     // Add ability to disable any ItemHoverable behaviour (for OS drag drop). E.g for example in Win32 (OLE implementation).
 #endif
     float       ConfigMemoryCompactTimer;       // = 60.0f          // Timer (in seconds) to free transient windows/tables memory buffers when unused. Set to -1.0f to disable.
 

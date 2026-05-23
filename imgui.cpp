@@ -1211,6 +1211,9 @@ ImGuiIO::ImGuiIO()
     ConfigWindowsMoveFromTitleBarOnlyEx = false;
 #endif
     ConfigMemoryCompactTimer = 60.0f;
+#if FE_IMGUI_C0010
+    ConfigDisableItemHoverableBehaviour = false;
+#endif
 
     // Platform Functions
     BackendPlatformName = BackendRendererName = NULL;
@@ -3600,6 +3603,10 @@ bool ImGui::IsItemHovered(ImGuiHoveredFlags flags)
 bool ImGui::ItemHoverable(const ImRect& bb, ImGuiID id)
 {
     ImGuiContext& g = *GImGui;
+#if FE_IMGUI_C0010
+    if (g.IO.ConfigDisableItemHoverableBehaviour)
+        return false;
+#endif
     if (g.HoveredId != 0 && g.HoveredId != id && !g.HoveredIdAllowOverlap)
         return false;
 
