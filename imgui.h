@@ -26,7 +26,8 @@
 //  - #FE_IMGUI_C0007: [imgui.h/_widgets.cpp            ]: Add ImGuiInputTextFlags_CharOnlyBehaviour.
 //  - #FE_IMGUI_C0008: [imgui.h/_widgets.cpp/_internal.h]: Add ability to completly disable drawing all RenderNavHighlight from most of widgets. This used only for Force Editor, in other Force Applications we can re-enable that.
 //  - #FE_IMGUI_C0009: [imgui.h/_tables.cpp             ]: Add ability to override default context popup behaviour that exist on ImGui::TableHeadersRow. See ImGui::TableSetOverrideHeaderPopupCallback in imgui_tables.cpp.
-//  - #FE_IMPUT_C0010: [imgui.h/_internal.cpp           ]: Add ability to disable any ItemHoverable behaviour (so for example for external drag drop we can drag and no see any hovered item colors and tooltip timer activation).
+//  - #FE_IMGUI_C0010: [imgui.h/_internal.cpp           ]: Add ability to disable any ItemHoverable behaviour (so for example for external drag drop we can drag and no see any hovered item colors and tooltip timer activation).
+//  - #FE_IMGUI_C0011: [imgui.h/_tables.cpp             ]: Add ability to completly disable navigation from tables from specified inner hidden window column part.
 
 // Enable or disable #FE_IMGUI_CXXXX change or fix, or bug fix that was not applied by Omar.
 
@@ -40,7 +41,8 @@
 #define FE_IMGUI_C0008 1  // 1 == apply new feature, 0 remove feature.
 #define FE_IMGUI_C0009 1  // 1 == apply new feature, 0 remove feature.
 #define FE_IMGUI_C0010 1  // 1 == apply new feature, 0 remove feature.
-
+#define FE_IMGUI_C0011 1  // 1 == apply new feature, 0 remove feature.
+ 
 // dear imgui, 1.88 WIP
 // (headers)
 
@@ -815,6 +817,18 @@ namespace ImGui
     IMGUI_API void                    TableSetBgColor(ImGuiTableBgTarget target, ImU32 color, int column_n = -1);  // change the color of a cell, row, or column. See ImGuiTableBgTarget_ flags for details.
 #if FE_IMGUI_C0009
     IMGUI_API ImGuiTableHeaderPopupFn TableSetOverrideHeaderPopupCallback(ImGuiTableHeaderPopupFn);
+#endif
+#if FE_IMGUI_C0011
+    // Tables: Navigation within current inner window.
+    // - Internally ImGui does not allow to disable navigation across table inner windows that its generates
+    //   in core, like for normal windows via: ImGuiWindowFlags_NoNav, so this temprary sets g.NavId and
+    //   g.NavWindow, because this two is connected, even if use: ImGui::PushItemFlag(ImGuiItemFlags_NoNav)
+    //   which actually disable nav to specified item in table, ImGui still during some widgets (e.g via
+    //   ImGui::ButtonBehaviour still sets g.HoveredID to be active) and thats selected some other 'last clicked'
+    //   'last selected' item as nav + render its as with ImGuiCol_HeaderHovered/ImGuiCol_ButtonHovered, that not
+    //   allows to implement a custom 'proper' navigation especially in Grid tables.
+    IMGUI_API void                    TablePushNoNavFromCurrentTableWindow();
+    IMGUI_API void                    TablePopNoNavFromCurrentTableWindow();
 #endif
 
     // Legacy Columns API (prefer using Tables!)

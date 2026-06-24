@@ -1855,6 +1855,11 @@ struct ImGuiContext
     bool                    NavMousePosDirty;                   // When set we will update mouse position if (io.ConfigFlags & ImGuiConfigFlags_NavEnableSetMousePos) if set (NB: this not enabled by default)
     bool                    NavDisableHighlight;                // When user starts using mouse, we hide gamepad/keyboard highlight (NB: but they are still available, which is why NavDisableHighlight isn't always != NavDisableMouseHover)
     bool                    NavDisableMouseHover;               // When user starts using gamepad/keyboard, we hide mouse hovering highlight until mouse is touched again.
+#if FE_IMGUI_C0011
+    ImGuiID                 NavFrameId;                         // Stores the last NavID before calling TablePushNoNavFromCurrentTableWindow, and resets back to NavID after TablePopNoNavFromCurrentTableWindow.
+    ImGuiWindow*            NavFrameWindow;                     // Stores the last NavWindow before TablePushNoNavFromCurrentTableWindow, and resets back to NavWindow after TablePopNoNavFromCurrentTableWindow.
+    bool                    NavFrameIgnore;                     // True if we in disabled table navigation state for its current inner window.
+#endif
 
     // Navigation: Init & Move Requests
     bool                    NavAnyRequest;                      // ~~ NavMoveRequest || NavInitRequest this is to perform early out in ItemAdd()
@@ -2072,6 +2077,11 @@ struct ImGuiContext
 
         NavWindow = NULL;
         NavId = NavFocusScopeId = NavActivateId = NavActivateDownId = NavActivatePressedId = NavActivateInputId = 0;
+#if FE_IMGUI_C0011
+        NavFrameId = 0;
+        NavFrameWindow = NULL;
+        NavFrameIgnore = false;
+#endif
         NavJustMovedToId = NavJustMovedToFocusScopeId = NavNextActivateId = 0;
         NavActivateFlags = NavNextActivateFlags = ImGuiActivateFlags_None;
         NavJustMovedToKeyMods = ImGuiModFlags_None;

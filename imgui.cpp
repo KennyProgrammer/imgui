@@ -8938,11 +8938,22 @@ bool ImGui::ItemAdd(const ImRect& bb, ImGuiID id, const ImRect* nav_bb_arg, ImGu
         //      to reach unclipped widgets. This would work if user had explicit scrolling control (e.g. mapped on a stick).
         // We intentionally don't check if g.NavWindow != NULL because g.NavAnyRequest should only be set when it is non null.
         // If we crash on a NULL g.NavWindow we need to fix the bug elsewhere.
+        bool gNavFrameIgnore = false;
+#if FE_IMGUI_C0011
+        gNavFrameIgnore = g.NavFrameIgnore;
+#endif
         window->DC.NavLayersActiveMaskNext |= (1 << window->DC.NavLayerCurrent);
-        if (g.NavId == id || g.NavAnyRequest)
+        if (g.NavId == id || g.NavAnyRequest && !gNavFrameIgnore)
+#if FE_IMGUI_C0011
+        // Im intentionally CHECK if g.NavWindow == NULL because im don't care much about ImGui Navaigation!
+        // If some of my plug-in API broke a cause NavWindow to be NULL just not NavProcessItem!
+        if (g.NavWindow) 
+#endif
+        {
             if (g.NavWindow->RootWindowForNav == window->RootWindowForNav)
                 if (window == g.NavWindow || ((window->Flags | g.NavWindow->Flags) & ImGuiWindowFlags_NavFlattened))
                     NavProcessItem();
+        }
 
         // [DEBUG] People keep stumbling on this problem and using "" as identifier in the root of a window instead of "##something".
         // Empty identifier are valid and useful in a small amount of cases, but 99.9% of the time you want to use "##something".

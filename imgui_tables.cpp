@@ -723,6 +723,69 @@ ImGuiTableHeaderPopupFn ImGui::TableSetOverrideHeaderPopupCallback(ImGuiTableHea
 }
 #endif
 
+// Navigation within current inner window.
+// Internally ImGui does not allow to disable navigation across table inner windows that its generates
+// in core, like for normal windows via: ImGuiWindowFlags_NoNav, so this temprary sets g.NavId and
+// g.NavWindow, because this two is connected, even if use: ImGui::PushItemFlag(ImGuiItemFlags_NoNav)
+// which actually disable nav to specified item in table, ImGui still during some widgets (e.g via
+// ImGui::ButtonBehaviour still sets g.HoveredID to be active) and thats selected some other 'last clicked'
+// 'last selected' item as nav + render its as with ImGuiCol_HeaderHovered/ImGuiCol_ButtonHovered, that not
+// allows to implement a custom 'proper' navigation especially in Grid tables.
+#if FE_IMGUI_C0011
+static bool g_NavCallRenderNavHightlightAlready = false;
+void ImGui::TablePushNoNavFromCurrentTableWindow()
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiTable* table = g.CurrentTable;
+    IM_ASSERT(table != NULL && "Need to call TablePushNoNavFromCurrentTableWindow() after BeginTable()!");
+    if (g.NavFrameIgnore)
+        return;
+
+    g.NavFrameId = g.NavId;
+    g.NavFrameWindow = g.NavWindow;
+    g.NavFrameIgnore = true;
+    g.NavId = 0;
+    g.NavWindow = nullptr;
+
+    ImGui::PushItemFlag(ImGuiItemFlags_NoNav, true);
+    ImGui::PushItemFlag(ImGuiItemFlags_NoNavDefaultFocus, true);
+
+#if FE_IMGUI_C0008
+    if (!g.NavCallRenderNavHightlight) {
+        g_NavCallRenderNavHightlightAlready = true;
+        return;
+    }
+    g.NavCallRenderNavHightlight = false;
+#endif
+}
+
+void ImGui::TablePopNoNavFromCurrentTableWindow()
+{
+    ImGuiContext& g = *GImGui;
+    ImGuiTable* table = g.CurrentTable;
+    IM_ASSERT(table != NULL && "Need to call TablePopNoNavFromCurrentTableWindow() after BeginTable()!");
+    if (!g.NavFrameIgnore)
+        return;
+
+    g.NavId = g.NavFrameId;
+    g.NavWindow = g.NavFrameWindow;
+    g.NavFrameId = 0;
+    g.NavFrameWindow = nullptr;
+    g.NavFrameIgnore = false;
+
+    ImGui::PopItemFlag();
+    ImGui::PopItemFlag();
+
+#if FE_IMGUI_C0008
+    if (g_NavCallRenderNavHightlightAlready) {
+        g_NavCallRenderNavHightlightAlready = false;
+        return;
+    }
+    g.NavCallRenderNavHightlight = true;
+#endif
+}
+#endif
+
 // Layout columns for the frame. This is in essence the followup to BeginTable().
 // Runs on the first call to TableNextRow(), to give a chance for TableSetupColumn() to be called first.
 // FIXME-TABLE: Our width (and therefore our WorkRect) will be minimal in the first frame for _WidthAuto columns.
